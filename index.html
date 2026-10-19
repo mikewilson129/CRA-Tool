@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FSNA / FSP Tool</title>
+<style id="pageStyle">@page { size: letter portrait; margin: 0.5in; }</style>
+<style>
+/* Offline, single file. Nothing is saved or sent anywhere. Refreshing or closing clears everything. */
+:root{--ink:#1c2530;--muted:#5b6673;--line:#d6dbe1;--bg:#f4f6f8;--card:#fff;--acc:#0f766e;--acc-soft:#e3f3f0;--warn:#b45309;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+#app{min-height:100vh;display:flex;flex-direction:column}
+header.top{background:#fff;border-bottom:1px solid var(--line);padding:8px 16px;position:sticky;top:0;z-index:5}
+.toprow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand{font-weight:700}
+.who{color:var(--muted);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:6px;align-items:center}
+.cg{display:flex;gap:2px}
+.chip{border:1px solid var(--line);background:#fff;color:var(--muted);font:600 11px/1 system-ui,sans-serif;min-width:22px;height:22px;padding:0 4px;border-radius:4px;cursor:pointer}
+.chip.r{background:var(--acc);border-color:var(--acc);color:#fff}
+.chip.na{background:#8b95a1;border-color:#8b95a1;color:#fff}
+.chip.cur{outline:2px solid #f59e0b;outline-offset:1px}
+.chip.wide{padding:0 8px}
+main{flex:1;width:100%;max-width:900px;margin:0 auto;padding:20px 16px 120px;outline:none}
+.crumb{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.crumb .pos{text-transform:none;letter-spacing:0}
+h1.item{font-size:26px;margin:4px 0 8px}
+h1.scr{font-size:24px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 16px}
+.desc{color:var(--muted);font-style:italic;margin:0 0 14px;font-size:15px}
+.desc p{margin:0 0 6px}
+.opt{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0;cursor:pointer}
+.opt .k{flex:0 0 34px;height:34px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px}
+.opt.sel{border-color:var(--acc);background:var(--acc-soft);box-shadow:0 0 0 2px var(--acc) inset}
+.opt.sel .k{background:var(--acc);border-color:var(--acc);color:#fff}
+.opt .k.na{font-size:14px}
+.cur-rating{font-size:14px;color:var(--muted);margin:0 0 8px}
+.form{display:grid;grid-template-columns:200px minmax(180px,280px) 1fr;gap:10px 14px;align-items:center}
+.form label{font-weight:600}
+input[type=text],textarea{font:inherit;font-size:17px;padding:8px 10px;border:1px solid #b8c0c9;border-radius:6px;width:100%;background:#fff;color:var(--ink)}
+input[type=text]:focus,textarea:focus,.prog:focus{outline:3px solid #f59e0b;outline-offset:1px;border-color:#f59e0b}
+textarea{resize:vertical}
+.help{font-size:14px;color:var(--muted)}
+.help b{color:var(--ink)}
+.help .warn{color:var(--warn);font-weight:600}
+.hint{color:var(--muted);font-size:14px;margin-top:14px}
+.stack{display:grid;gap:12px;max-width:760px}
+.stack label{font-weight:600;display:block;margin-bottom:4px}
+.ctx{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px;color:var(--muted);margin-bottom:14px;white-space:pre-wrap}
+.prog{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px;border:1px solid #b8c0c9;border-radius:6px;background:#fff;width:max-content;max-width:100%}
+.prog button{font:inherit;font-size:15px;padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer}
+.prog button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.kv{display:grid;grid-template-columns:180px 1fr;gap:6px 12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;max-width:600px}
+.kv div:nth-child(odd){color:var(--muted)}
+.kv div:nth-child(even){font-weight:600}
+.printbtns{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 18px}
+button.big{font:600 18px/1.2 system-ui,sans-serif;padding:16px 22px;border-radius:8px;border:2px solid var(--acc);background:var(--acc);color:#fff;cursor:pointer}
+button.big.alt{background:#fff;color:var(--acc)}
+button.plain{font:inherit;font-size:14px;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+button.danger{color:#b91c1c;border-color:#f0c4c4}
+.navbtns{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.summary{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:12px}
+.summary p{margin:4px 0}
+footer.keys{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:6px 16px 8px;font-size:13px;color:var(--muted);z-index:5}
+.keyline{display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:center}
+#status{text-align:center;font-size:13px;min-height:18px;color:var(--acc);font-weight:600}
+#status.warn{color:var(--warn)}
+kbd{display:inline-block;font:600 12px/1 ui-monospace,Consolas,monospace;border:1px solid #b8c0c9;border-bottom-width:2px;border-radius:4px;padding:2px 5px;background:#f8fafb;color:var(--ink)}
+
+/* ---------- print sheets (built only when you press a print button) ---------- */
+#printRoot{position:absolute;left:-30000px;top:0}
+.sheet{background:#fff;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+#fsnaSheet{width:7.5in;font-family:Arial,Helvetica,sans-serif}
+.fs-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5pt solid #000;padding-bottom:3pt;margin-bottom:5pt}
+.fs-title{font-size:12pt;font-weight:700}
+.fs-title span{font-weight:400;font-size:10pt}
+.fs-frc{font-size:10pt}
+.fs-meta{display:grid;grid-template-columns:1.25fr 1.25fr 1fr;gap:3pt 14pt;font-size:10pt;margin-bottom:8pt}
+.fs-meta span{display:inline-block;color:#444;font-size:7.5pt;text-transform:uppercase;letter-spacing:.03em;margin-right:5pt}
+.fs-meta b{font-weight:700}
+.fitems{column-gap:18pt;column-rule:.5pt solid #bbb}
+.fitems .sh{font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#333;border-bottom:.5pt solid #999;margin:7pt 0 3pt;padding-bottom:1pt;line-height:1.15}
+.fitems .sh{margin-top:0}
+.fitems .sec{padding-bottom:7pt}
+.sec,.it{break-inside:avoid}
+.fp1{height:9.85in;display:flex;flex-direction:column}
+.ffoot{margin-top:auto;text-align:right;font-style:italic;font-size:10pt;border-top:.5pt solid #999;padding-top:3pt}
+.fp2{break-before:page}
+.it{display:flex;align-items:center;margin:.18em 0;white-space:nowrap}
+.num{flex:0 0 auto;width:2em;height:2em;border:.1em solid #000;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800}
+.val{margin-left:.55em;font-weight:800;font-size:1.35em}
+.val.na{font-size:1.1em}
+.val.skip{font-weight:400;font-style:italic;color:#666;font-size:.85em}
+.fs-notes{margin-top:6pt;border:1pt solid #000;padding:6pt 8pt;font-size:11pt}
+.fs-notes .nl{font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2pt}
+.fs-notes .nt{white-space:pre-wrap}
+.none{font-style:italic;color:#555}
+
+#fspSheet{width:10.2in;font-family:"Times New Roman",Times,serif;font-size:10.5pt}
+.fsp-brand{font-family:Arial,Helvetica,sans-serif;font-weight:700;color:#1b6f8a;font-size:1.15em;margin-bottom:.35em}
+table.fsp-head{width:100%;border-collapse:collapse;margin-bottom:.6em}
+.fsp-head td{padding:.15em .3em;vertical-align:bottom}
+.fsp-head td.l{font-weight:700;white-space:nowrap;width:1%}
+.fsp-head td.v{border-bottom:.75pt solid #000}
+.fsp-head td.cap{font-style:italic;font-weight:700;text-align:center;font-size:.9em;vertical-align:top}
+table.fsp-dates,table.fsp-main{width:100%;border-collapse:collapse;border:1.5pt solid #000;table-layout:fixed}
+.fsp-dates td{border:.75pt solid #000;padding:.2em .35em;height:1.9em;vertical-align:top}
+.fsp-dates td.sh{background:#eee}
+.fsp-main{margin-top:.7em}
+.fsp-main td{border:.75pt solid #000;padding:.12em .35em;vertical-align:top;line-height:1.15}
+.fsp-main tr.hd td{background:#d9d9d9}
+.fsp-main tr.gh td{border-top:1.5pt solid #000;vertical-align:middle}
+.fsp-main .c{text-align:center}
+.fsp-main .u{text-decoration:underline}
+.fsp-main .b{font-weight:700}
+.fsp-main .txt{white-space:pre-wrap}
+.fsp-main tr.vis td{height:2.8em}
+.fsp-main tr.gb td{height:2.7em}
+.fsp-main tr.pb td{height:1.9em}
+.fsp-main .pc{white-space:nowrap;vertical-align:middle}
+.cb{display:inline-block;width:.9em;height:.9em;border:.75pt solid #000;vertical-align:-.12em;text-align:center;line-height:.9em;font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:.95em}
+.fsp-next{font-weight:700;margin:.5em 0 0}
+.fsp-next .dl{font-weight:400;font-style:italic;font-size:.9em;padding-left:22em}
+.fsp-foot{font-style:italic;font-size:.75em;margin-top:.5em}
+
+@media print{
+  html,body{background:#fff}
+  #app{display:none !important}
+  #printRoot{position:static;left:auto}
+  body:not(.p-fsna) #fsnaSheet{display:none}
+  body:not(.p-fsp) #fspSheet{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="toprow"><span class="brand">FSNA / FSP</span><span class="who" id="who"></span></div>
+    <div class="chips" id="chips"></div>
+  </header>
+  <main id="main" tabindex="-1"></main>
+  <footer class="keys"><div id="status"></div><div class="keyline" id="keys"></div></footer>
+</div>
+<div id="printRoot"><div class="sheet" id="fsnaSheet"></div><div class="sheet" id="fspSheet"></div></div>
+
+<script>
+"use strict";
+/* ===== Settings ===== */
+const FRC = "Salem";
+const CLINICIAN = "Mike Wilson";
+
+/* ===== Form J items: [number, title, description, [0,1,2,3], N/A text or null] ===== */
+const SECTIONS = [
+ {g:"Family Status", name:"Household Status", items:[
+  [1,"LANGUAGE","This item looks at whether the child and family need help to communicate with you or others in English. This item includes spoken, written, and sign language, as well as addresses issues of literacy.\n\nThis item should be rated without considering the child as an adequate interpreter. Interpreting for a parent may place a burden on a child and/or negatively impact the quality of care the child or family receives. If another adult family member serves as an interpreter in a behavioral health setting, the quality of this interpretation and confidentiality of the patient cannot be assured. Interpreting and written translation are complex skills. Trained and accredited interpreters and translators are impartial, confidential, and accountable to a code of ethics.\n\nSome families may have difficulty communicating due to issues beyond language difference, such as hearing issues or difficulty reading written English language. In addition, families may have difficulty understanding mental/behavioral health terminology. Issues such as these should be rated here.\n\nIf there are language differences between family members, this would also be rated in the Cultural Differences within a Family item.",
+   ["No evidence that there is a need or preference for an interpreter or bilingual services and/or child and family speak, hear and read English.",
+    "Child and/or family speak or read English, but potential communication problems exist because of limited vocabulary or comprehension of the nuances of the language.",
+    "Child and/or significant family members possess only limited ability to speak and/or read English. While basic communication may be possible, a bilingual provider or interpreter is needed to assure that adequate communication is possible for extensive work.",
+    "Child and/or significant family members do not speak English. A bilingual provider or interpreter is needed for all communications."], null],
+  [2,"FINANCIAL STATUS","This item refers to the family's income (regardless of its source) in comparison to the family's financial needs (housing, clothing, utilities, etc.).",
+   ["Family has financial resources necessary to meet needs.",
+    "Family has financial resources necessary to meet most needs; however, some limitations exist.",
+    "Family has financial difficulties that limit their ability to meet significant family needs.",
+    "Family experiencing financial hardship, poverty."], null],
+  [3,"FOOD SECURITY","This item refers to the family's current food security and hunger needs.",
+   ["Family has sufficient resources to meet basic food needs without being supplemented by community resources.",
+    "Family has sufficient resources to mostly meet basic food needs, using supplements from community resources.",
+    "Family experiences frequent food insecurity. Some family members may cut the size of meals or skip meals because there is not enough money for food.",
+    "Family has very low food security. Family is at risk of significant health and nutrition issues due to lack of food."], null],
+  [4,"TRANSPORTATION","This item refers to the level of transportation required to ensure that the family could effectively participate in employment, treatment, and other related activities.",
+   ["Family has no transportation needs.",
+    "Family has occasional transportation needs. However, these can be met through existing natural supports.",
+    "Family has occasional transportation needs that require a special vehicle, or family has frequent transportation needs (e.g., daily to work or therapy) that do not require a special vehicle. Family has no transportation options available to meet these needs. The lack of available transportation is putting employment and/or treatment success at risk.",
+    "Family requires frequent (e.g., daily to work or therapy) that require a special vehicle and has no transportation options available to meet these needs. The lack of available transportation is putting employment and/or treatment success at risk."], null],
+  [5,"CHILD CARE","This item refers to the level of access the family has to quality, affordable child care.",
+   ["Quality, affordable child care is being used or child care is not needed.",
+    "Child care is hard to find and afford, but family is able to provide care. Family has minor concerns about child care status, but is working towards a resolution.",
+    "Family is rarely able to find or afford quality care. Family has several concerns about child care. Unreliable child care is putting employment and/or treatment success at risk.",
+    "Family has need for child care, but no safe and affordable resources are available. Lack of child care is preventing parental growth/progress. Family must resort to using inappropriate child care."], null],
+  [6,"MEDICAL CARE","This item refers to the level of access the family has to quality, affordable medical care. This should include the coverage and care of the medical, dental, vision, and mental health needs of the family.",
+   ["Quality, affordable medical care is available and being used by all family members.",
+    "Basic needs are met, but access to care is generally inadequate. One or more family members do not have adequate access to health care.",
+    "Care received is inadequate. Lack of available care is putting employment, educational, and/or treatment success at risk.",
+    "One or more family members health is endangered and medical problems are not being addressed."], null],
+  [7,"RESIDENTIAL STABILITY","This item rates the family's current and likely future housing circumstances.",
+   ["This rating indicates a family in stable housing with no known risks of instability.",
+    "This rating indicates a family who is currently in stable housing but there are significant risks of housing disruption (e.g. loss of job).",
+    "This rating indicates a family who has moved frequently or has very unstable housing.",
+    "This rating indicates a family who is currently homeless."], null]
+ ]},
+ {g:"Family Status", name:"Family Strengths and Supports", items:[
+  [8,"RELATIONS WITH EXTENDED FAMILY","This item refers to the family's relationship with other relatives who do not currently live with the family.",
+   ["Extended family members play a central role in the functioning and well-being of the family. They have predominately positive relationships with members of the extended family and conflicts are resolved quickly.",
+    "Extended family members play a supportive role in family functioning. They generally have positive relationships with members of the extended family. Conflicts may linger but eventually are resolved.",
+    "Extended family members are marginally involved in the functioning and well-being of the family. They have generally strained or absent relationships with extended family members.",
+    "Family is not in contact or estranged from extended family members. They have negative relationships with continuing conflicts."], null],
+  [9,"NATURAL SUPPORTS","Natural supports refer to help that one does not have to pay for. This could include friends and families or a church or other organization that helps the family in times of need.",
+   ["Family has substantial natural supports to assist in address most family and child needs.",
+    "Family has natural supports but some limitations exist whereby these supports are insufficient to address some family and child needs.",
+    "Family has limited natural supports.",
+    "Family has no natural supports."], null],
+  [10,"COMMUNITY INVOLVEMENT","Community is broadly defined as the people and institutions where the family lives. This could include a neighborhood, a city or town, or even a county. 'Community' is generally understood as the institutions that comprise it—businesses, churches, community centers, etc.",
+   ["Family is actively involved in their community.",
+    "Family is somewhat involved in their community. They are supportive of and involved in community institutions.",
+    "Family identifies with a community but is not currently involved.",
+    "Family is not involved with any community."], null],
+  [11,"COMMUNITY ENVIRONMENT","This item refers to the family's perception of how safe they feel in the community in which they are currently living. This does not refer to feeling safe within their family or household, but refers to the larger neighborhood in which they live.",
+   ["Family perceives their neighborhood and community to be safe and have no concerns regarding safety in their community.",
+    "Family perceives their neighborhood to somewhat safe most of the time, but express occasional concerns.",
+    "Family perceives their community to be safe only about half the time, and worries about the family's safety in the community.",
+    "Family perceives their community to be unsafe most of the time and expresses significant concern about the family's safety in their current living situation."], null],
+  [12,"CULTURAL IDENTITY","Cultural identity refers to the family's view of themselves as belonging to a specific cultural group. This cultural group may be defined by a number of factors, including race, religion, ethnicity, geography, or lifestyle.",
+   ["Family has clear and consistent cultural identity and is connected to others who share this cultural identity.",
+    "Family is experiencing some confusion or concern regarding cultural identity.",
+    "Family has significant struggles with own cultural identity. Family may have cultural identity but is not connected with others who share this culture.",
+    "Family has no cultural identity or is experiencing significant problems due to conflict regarding cultural identity."], null],
+  [13,"CULTURAL PRACTICE","Cultural practice includes activities and traditions that are culturally centered, including tribal events and the celebration of culturally specific holidays, such as Rosh Hashanah and Kwanzaa. These rituals may also include daily activities that are culturally specific (e.g., praying toward Mecca at specific times, eating a specific diet, access to media).",
+   ["Family is consistently able to practice traditions and activities consistent with their cultural identity.",
+    "Family is generally able to practice traditions and activities consistent with their cultural identity; however, they sometimes experience some obstacles to the performance of these traditions.",
+    "Family experience significant barriers and are sometimes prevented from practicing traditions and activities consistent with their cultural identity.",
+    "Family is unable to practice traditions and activities consistent with their cultural identity."], null],
+  [14,"CULTURAL DIFFERENCES WITHIN A FAMILY","Sometimes individual members within a family have different backgrounds, values and/or perspectives. In many cases, this may not cause any difficulties in the family as they are able to communicate about their differences, but for others it may cause conflict, stress, or disengagement between family members and impact the child's functioning. This might occur in a family where a child is adopted from a different race, culture, ethnicity, or socioeconomic status. The parent may struggle to understand or lack awareness of the child's experience of discrimination. Additionally this may occur in families where the parents are first generation immigrants to the United States. The youth may refuse to adhere to certain cultural practices, choosing instead to participate more in popular US culture.",
+   ["No evidence of conflict, stress or disengagement within the family due to cultural differences or family is able to communicate effectively in this area.",
+    "Child and family have struggled with cultural differences in the past, but are currently managing them well or there are mild issues of disagreement.",
+    "Child and family experience difficulties managing cultural differences within the family which negatively impacts the functioning of the child.",
+    "Child and family experience such significant difficulty managing cultural differences within the family that it interferes with the child's functioning and/or requires immediate action."], null]
+ ]},
+ {g:"Family Status", name:"Family Relationships", items:[
+  [15,"PARENTAL/CAREGIVER COLLABORATION","This item refers to the relationship between parents (or other primary caregivers) with regard to working together in child-rearing activities. This includes the relationship between divorced parents with shared custody.",
+   ["Adaptive collaboration. Parents/caregivers usually work together regarding issues of development and well-being of the children. They are able to negotiate disagreements related to their children.",
+    "Mostly adaptive collaboration. Generally good parental collaboration with occasional difficulties negotiating miscommunications or misunderstanding regarding issues of the development and well-being of the children.",
+    "Limited adaptive collaboration. Moderate problems of communication and collaboration between two or more adult parents/caregivers with regard to issues of the development and well-being of the children.",
+    "Significant difficulties with collaboration. Minimal collaboration and destructive or sabotaging communication among any parents/caregivers regarding issues related to the development and well-being of the children."],
+   "Not applicable. Single parents/caregiver with no partner or co-parent."],
+  [16,"RELATIONSHIPS AMONG SIBLINGS","This item refers to how the children in the family (brothers and sisters, adopted siblings, as well as step- and half-siblings) get along with each other.",
+   ["Adaptive relationships. Siblings generally get along well. Occasional fights or conflicts between them occur, but are quickly resolved.",
+    "Mostly adaptive relationships. Siblings generally get along, however, when fights or conflicts arise there is some difficulty in resolving them.",
+    "Limited adaptive relationships. Siblings often do not get along. They generally attempt to resolve their fights or conflicts but have limited success in doing so.",
+    "Significant difficulties with relationships. Siblings do not get along. The relationships are marked by detachment or active, continuing conflicts, and may include physical violence."],
+   "Not applicable."],
+  [17,"FAMILY CONFLICT","This item refers to how much fighting occurs between family members. Domestic violence refers to physical fighting in which family members might get hurt.",
+   ["Minimal conflict. Family gets along well and negotiates disagreements appropriately.",
+    "Some conflict. Family generally gets along fairly well but when conflicts arise resolution is difficult.",
+    "Significant conflict. Family is generally argumentative and conflict is a fairly constant theme in family communications.",
+    "Domestic violence. Threats or occurrence of physical, verbal, or emotional altercations. Family with current restraining order against one member would be rated here."], null],
+  [18,"FAMILY ROLE APPROPRIATENESS","Boundaries refer to the ability of family members to separate themselves as individuals and appropriately separate communication with various family members. Hierarchies refer to the organization of decision-making authority in the family.",
+   ["Adaptive boundaries. Family has strong appropriate boundaries among members. Clear inter-generational hierarchies are maintained.",
+    "Mostly adaptive boundaries. Family has generally appropriate boundaries and hierarchies. May experience some minor blurring of roles.",
+    "Limited adaptive boundaries. Family has difficulty maintaining appropriate boundaries and/or hierarchies. Some significant role problems exist.",
+    "Significant difficulties with boundaries. Family has significant problems with establishing and maintaining reasonable boundaries and hierarchies. Significant role confusion or reversals may exist."], null]
+ ]},
+ {g:"Parenting Team Status", name:"Parental Commitment", items:[
+  [19,"UNDERSTANDING OF YOUTH'S NEEDS","This item refers to the parent's/caregiver's level of understanding of their children's needs, as well as their motivation for learning more.",
+   ["Parents/Caregivers appear to have a good understanding of their children's needs, and appear motivated to learn more about their needs.",
+    "Parents/Caregivers appear to have some understanding of their children's needs, but appear to be motivated to learn more about their needs.",
+    "Parents/Caregivers appear to have a poor understanding of their children's needs and their motivation to learn more seems unclear.",
+    "Parents/Caregivers appear to have little to no understanding of their children's needs and appear to have little motivation to learn more about their needs."], null],
+  [20,"ABILITY TO COMMUNICATE","This item describes the parents/caregivers' ability to articulate in an understandable way their thoughts, feelings, beliefs, and concerns regarding parenting and children's needs and strengths.",
+   ["Parents/caregivers are able to express feeling and thoughts effectively with regard to family and child issues.",
+    "Parents/caregivers are able to express feeling and thoughts but sometimes struggle to express these so that others can listen and/or understand.",
+    "Parents/caregivers require help learning to express feelings and thoughts effectively with regard to family and child issues.",
+    "Parents/caregivers require substantial help learning to express feelings and thoughts effectively with regard to family and child issues."], null],
+  [21,"KNOWLEDGE OF SERVICE AND SUPPORTS OPTIONS","This item refers to the family's knowledge of choices they might have for specific treatments, interventions or other services and support needs and options that might help the family address their needs or the needs of one of the family's members. A family with a child having special needs (e.g., hearing-impaired, medically complex, developmental disability, etc.) may also be included here.",
+   ["Parents/caregivers have strong understanding of service and support needs and options.",
+    "Parents/caregivers have understanding of service and support needs and options but may still require some help in learning about certain aspects of these services.",
+    "Parents/caregivers require assistance in understanding service and support needs and options.",
+    "Parents/caregivers require substantial assistance in identifying and understanding service and support needs and options."], null],
+  [22,"INVOLVEMENT WITH CARE","This rating should be based on the level of involvement the parents/caregivers have in the planning and provision of services.",
+   ["Parents/caregivers are actively involved in the planning and/or implementation of services and are able to be effective advocates on behalf of the child or adolescent.",
+    "Parents/caregivers are consistently involved in the planning and/or implementation of services for the child or adolescent but are not active advocates on behalf of the child or adolescent.",
+    "Parents/caregivers are minimally involved in the care of the child or adolescent.",
+    "Parents/caregivers are uninvolved with the care of the child or adolescent. Parents/Caregivers may want the child out of the home or fails to visit the child when in residential placement."], null],
+  [23,"YOUTH/FAMILY RELATIONSHIP TO SYSTEM","There are situations and instances when people may be apprehensive to engage with the formal behavioral health care or helping system. Clients, as well as providers, bring their cultural experiences to the treatment relationship. Members of some cultural groups may be accustomed to the use of traditional healers or self-management of behavioral health issues or are simply distrustful of Western medicine. Undocumented individuals may be fearful of interaction with the health care system because of their legal status. These complicated factors may translate into generalized discomfort with the formal behavioral health care system. This item rates the degree to which the family's apprehension to engage with the formal health care system creates a barrier for receipt of care. Additionally, the professionals' relationship with the family may require the clinician to reconsider their approach. For example a family who refuses to see a psychiatrist due to their belief that medications are over-prescribed for children in their community. A clinician must consider this experience and understand its impact on the family's choices.",
+   ["The caregiver/child expresses no concerns about engaging with the formal helping system.",
+    "The caregiver/child expresses little or mild hesitancy to engage with the formal helping system that is easily rectified with clear communication about intentions or past issues engaging with formal helping system.",
+    "The caregiver/child expresses moderate hesitancy to engage with the formal helping system that requires significant discussions and possible revisions to the treatment plan.",
+    "The caregiver/child expresses significant hesitancy to engage with the formal helping system that prohibits the family's engagement with the treatment team at this time. When this occurs, the development of an alternate treatment plan may be required."], null]
+ ]},
+ {g:"Parenting Team Status", name:"Parenting Skills", items:[
+  [24,"DEMONSTRATES EFFECTIVE PARENTING APPROACHES","This item refers to the parents'/caregivers' knowledge of parenting skills and strategies and his/her ability to actually use these skills and strategies with their children.",
+   ["Parents/caregivers apply flexibility in parenting role; caregivers have knowledge of multiple parenting practices and are able to implement them effectively with their children in a manner that is consistent with the child's development and needs.",
+    "Parents/caregivers have knowledge of parenting practices that are consistent with child's needs and development, but may struggle at times to effectively implement them.",
+    "Parents/caregivers have limited flexibility and/or knowledge of parenting practices; parenting practices are seldom effective and/or consistent with child's development and needs.",
+    "Parents/caregivers are extremely limited in their understanding of parenting practices. May be very concrete or rigid in their approach to child rearing."], null],
+  [25,"SUPERVISION","This item refers to the success with which the caregivers are able to monitor children in their care. This item should be rated consistent with the developmental needs of the children.",
+   ["Good supervision. Parents/caregivers demonstrate consistent ability to supervise their children according to developmental needs.",
+    "Adequate supervision. Parents/caregivers demonstrate generally good ability to supervise children. However some problems may occur occasionally.",
+    "Fair supervision. Parents/caregivers have difficulty maintaining and appropriate level of supervision of children.",
+    "Significant difficulties with supervision. Parents/caregivers have significant problems maintaining supervision of their children."], null],
+  [26,"NUTRITION MANAGEMENT","This item refers to how well the parent or caregiver is providing a healthy diet for their children, as well as how informed the parent/caregiver is about nutrition.",
+   ["Parents/Caregivers are providing a healthy diet for their children.",
+    "Parents/Caregivers understand what constitutes a healthy diet for their children, but may struggle to provide it consistently.",
+    "Parents/Caregivers are not providing a healthy diet consistently for their children, and appear to have a poor understanding of what constitutes a healthy diet.",
+    "Parents/Caregivers are unable to meet their children's nutritional needs. They appear to have little to no understanding of what constitutes a healthy diet. Lack of adequate nutrition is interfering with the children's functioning."], null],
+  [27,"LEARNING ENVIRONMENT","This item refers to the degree to which the parents/caregivers are providing an appropriate environment at home that supports the children's learning, as well as the level of understanding the parent/caregiver demonstrates as to what constitutes a supportive learning environment.",
+   ["Parents/Caregivers are providing a developmentally appropriate learning environment for their children.",
+    "Parents/Caregivers understand what constitutes a developmentally appropriate learning environment for their children, but may struggle to provide it consistently.",
+    "Parents/Caregivers are not consistently providing an adequate learning environment for their children, and appear to have a poor understanding of what constitutes such an environment, but express a willingness to improve.",
+    "Parents/Caregivers are not providing an adequate learning environment for their children, appear to have a poor understanding of what constitutes such an environment, and do not demonstrate any interest or willingness to improve."], null],
+  [28,"EMPATHY WITH CHILDREN","This item refers to the parents'/caregivers' ability to understand and respond to the joys, sorrows, anxieties and other feelings of children with helpful, supportive emotional responses.",
+   ["Adaptive emotional responsiveness. Parents/caregivers are emotionally empathic and attend to child's emotional needs.",
+    "Parents/caregivers are generally emotionally empathic and typically attend to child's emotional needs.",
+    "Limited adaptive emotional responsiveness. Parents/caregivers are often not empathic and frequently are not able to attend to child's emotional needs.",
+    "Significant difficulties with emotional responsiveness. Parents/caregivers are not empathic and rarely attend to the child's emotional needs."], null]
+ ]},
+ {g:"Parents/Caregiver's Status", name:"Parent/Caregiver Health and Well-being", items:[
+  [29,"PHYSICAL HEALTH","Physical health includes medical and physical challenges faced by the parent/caregiver.",
+   ["Parent/caregiver has no physical health limitations that require assistance or impact child care.",
+    "Parent/caregiver has some physical health limitations but they do not require assistance or interfere with ability to care for the child at this time.",
+    "Parent/caregiver has significant physical health limitations that make difficult or prevent them from being able to care for the child without immediate assistance.",
+    "Parent/caregiver is physically unable to provide care or assistance to the child as needed."], null],
+  [30,"DEVELOPMENTAL","This item describes the parent's/caregiver's developmental status in terms of low IQ, intellectual disability or other developmental disabilities and the impact of these conditions on his/her ability to care for child.",
+   ["Parent/caregiver has no developmental limitations that impact child care.",
+    "Parent/caregiver has some developmental limitations that interfere or may interfere with his or her ability for child care at this time.",
+    "Parent/caregiver has significant developmental limitations that make difficult or prevent them from being able to parent and care for their child without assistance.",
+    "Parent/caregiver is unable to provide any needed assistance or child care due to serious developmental disabilities."], null],
+  [31,"MENTAL HEALTH","This item refers to the parent/caregiver's mental health status. Serious mental illness would be rated as a '2' or '3' unless the individual is in recovery or successfully managing illness.",
+   ["Parent/caregiver has no mental health limitations that require assistance or impact child care.",
+    "Parent/caregiver has some mental health limitations but they do not significantly interfere with ability to care for the child at this time.",
+    "Parent/caregiver has significant mental health limitations that make difficult or prevent them from being able to care for the child without immediate assistance.",
+    "Parent/caregiver is unable to provide any needed assistance or attendant care to child due to serious mental illness."], null],
+  [32,"PARENT/CAREGIVER POST-TRAUMATIC REACTIONS","This rating describes post-traumatic reactions faced by parent/caregiver, including emotional numbing and avoidance, nightmares and flashbacks that are related to their child's or their own traumatic experiences.",
+   ["Parent/caregiver has not experienced any significant trauma or has adjusted to traumatic experiences.",
+    "Parent/caregiver has some mild adjustment problems related to their child's or their own traumatic experiences. Caregiver may exhibit some guilt about their child's trauma or become somewhat detached or estranged from others. These symptoms may mildly impact their ability to provide child care.",
+    "Parent/caregiver has moderate adjustment difficulties related to traumatic experiences, and these difficulties impact ability to provide child care. Caregiver may have nightmares or flashbacks of the trauma.",
+    "Parent/caregiver has significant adjustment difficulties associated with traumatic experiences, and these difficulties severely impact the caregiver's ability to provide child care. Symptoms might include intrusive thoughts, hypervigilance, and constant anxiety."], null],
+  [33,"DISCRIMINATION/BIAS","This item refers to any experience of discrimination or bias that is purposeful or accidental, direct or indirect. Discrimination may be based on gender, race, ethnicity, socioeconomic status, religion, sexual orientation, skin shade/color/complexion, linguistic ability, body shape/size, etc. Any statement of discrimination by a client should be acknowledged and respected. Children, youth and families' feelings are what matter. These feelings can impact how a child or family function and creates stress for the child and/or family which can correlate with depression and/or poor health outcomes. The presence of such discrimination or experiences may present a barrier to accessing supports or services that may be helpful to the child or family. When families report feelings of discrimination providers can discuss those feelings and how they impact functioning, create an advocacy statement in the treatment plan, or assist the family in finding a better fit for necessary services.",
+   ["No report of experiences of discrimination that impacts the child or family's ability to function and/or creates stress.",
+    "Child or family reports experiences of discrimination that occurred recently or in the past, but it is not currently causing any stress or difficulties for the child or family.",
+    "Child or family reports experiences of discrimination which is currently interfering with the child or family's functioning.",
+    "Child or family reports experiences of discrimination that substantially and immediately interferes with the child or family's functioning on a daily basis and requires immediate action."], null],
+  [34,"SUBSTANCE USE","This item rates the parent/caregiver's pattern of alcohol and/or drug use. Substance-related disorders would be rated as a '2' or '3' unless the individual is in recovery.",
+   ["Parent/caregiver has no substance-related limitations that impact or impair parent/caregiving ability and child care.",
+    "Parent/caregiver has some substance-related limitations that interfere or may interfere with parenting ability and child care.",
+    "Parent/caregiver has significant substance-related limitations that make difficult or prevent them from being able to parent and care for their child without assistance.",
+    "Parent/caregiver is unable to provide any needed assistance or child care due to serious substance dependency or abuse."], null]
+ ]},
+ {g:"Parents/Caregiver's Status", name:"Life Functioning", items:[
+  [35,"EMPLOYMENT","This item is rated only for individuals who are employed or are in an employment like environment (e.g. training program, internship). An individual whose disability prevents employment would be rated as N/A.",
+   ["If able, parent/caregiver is fully employed with no problems at work. Alternatively, parent/caregiver may not be seeking employment or chooses to be a full-time homemaker.",
+    "Parent/caregiver is partially employed, employed significantly below her/his level of education/experience/training, or is having some work related problems.",
+    "Parent/caregiver is having significant work-related problems or is temporarily unemployed because of such difficulties.",
+    "Significant difficulties with vocational functioning. Parent/Caregiver is chronically unemployed or obtains financial resources through activities that are illegal and/or potentially harmful to her/himself and her/his family members (prostitution, drug dealing, for example)."],
+   "Parent/caregiver disabled and unable to work."],
+  [36,"SELF-CARE","This item refers to the level of self-care that a parent/caregiver is able to achieve.",
+   ["Parents/Caregivers describe activities they engage in regularly that help manage stress and provide enjoyment.",
+    "Parents/Caregivers describe activities they engage periodically that help manage stress and provide enjoyment, and express a desire to increase these activities.",
+    "Parents/Caregivers are not consistently engaging in any activities that help manage stress or provide enjoyment, but express a desire to develop such activities.",
+    "Parents/Caregivers do not engage in any activities that help manage stress or provide enjoyment, and do not appear interested in developing such activities."], null],
+  [37,"LEGAL","This item describes the parent's/caregiver's involvement with the legal system.",
+   ["Parent/caregiver has no known legal difficulties.",
+    "Parent/caregiver has a history of legal problems but currently is not involved with the legal system.",
+    "Parent/caregiver has some legal problems and is currently involved in the legal system.",
+    "Parent/caregiver has serious current or pending legal difficulties that place him or her at risk for incarceration."], null]
+ ]},
+ {g:"Parents/Caregiver's Status", name:"Social Relationships", items:[
+  [38,"PARTNER RELATIONS","This item refers to the parent/caregiver's relationship with another adult. If married, this refers to the parent/caregiver's husband or wife.",
+   ["Parent/caregiver has a strong, positive, partner relationship with another adult. This adult functions as a member of the family. A person without a relationship who currently has no interest in one would be rated here.",
+    "Parent/caregiver has a generally positive partner relationship with another adult. This adult may not function as a member of the family.",
+    "Parent/caregiver is currently not involved in any partner relationship and the lack of relationship interferes with functioning.",
+    "Parent/caregiver is currently involved in a negative, unhealthy relationship with another adult. This would also include a parent/caregiver involved in a relationship with domestic violence issues."], null]
+ ]},
+ {g:"Child's Status", name:"Child Health and Well-being", items:[
+  [39,"PHYSICAL HEALTH","Physical health includes medical and physical challenges faced by the child.",
+   ["Good health. Child is in generally good physical health.",
+    "Adequate health. Child gets sick more often than peers, but the health problems do not interfere with his or her general functioning.",
+    "Fair health. Child has some health problems that interfere with his or her functioning.",
+    "Significant health challenges. Child has significant health problems that may be chronic or life threatening."], null],
+  [40,"SUBSTANCE EXPOSURE","This item describes the child's exposure to substance use and abuse both before and after birth. (Consider father's substance use/abuse as well.)",
+   ["Child has no known in utero exposure to alcohol or drugs, and there was no known exposure in the home.",
+    "Child had either mild in utero exposure, or there is current alcohol and/or drug use in the home.",
+    "Child was exposed to significant alcohol or drugs in utero. Any ingestion of illegal or prescription drugs during pregnancy (e.g., heroin, cocaine, methamphetamine) or use of alcohol or tobacco would be rated here.",
+    "Child was exposed to alcohol or drugs in utero and continued to be exposed in the home. Any child who evidenced symptoms of substance withdrawal at birth (e.g., crankiness, feeding problems, tremors, weak and continual crying) would be rated here."], null],
+  [41,"MENTAL HEALTH","This item refers to the child's mental health status. Serious mental illness would be rated as a '2' or '3' unless the child is in recovery or successfully managing illness.",
+   ["No mental health challenges. Child has no signs of any notable mental health problems.",
+    "Mild mental health challenges. Child may have mild problems with adjustment, may be somewhat depressed, withdrawn, irritable, or agitated.",
+    "Moderate mental health challenges. Child has a diagnosable mental health problem that interferes with his or her functioning.",
+    "Significant challenges with mental health. Child has a serious psychiatric disorder."], null],
+  [42,"HYPERACTIVITY/IMPULSIVITY","This item rates behavioral symptoms associated with hyperactivity and/or impulsiveness, i.e. loss of control of behaviors, which includes, but is not limited to, Attention Deficit/Hyperactivity Disorder (ADHD) and disorders of impulse control.",
+   ["No evidence of symptoms of hyperactivity or impulse control.",
+    "Some problems with hyperactive, impulsive or distracted behavior place the child at risk of future difficulty in functioning.",
+    "Clear evidence of problems with hyperactive, impulsive or distracted behavior interfere with the child's ability to function in at least one life domain.",
+    "Clear evidence of a dangerous level of hyperactivity and/or impulsive behavior places the child at risk of physical harm."], null],
+  [43,"DEPRESSION","This item rates displayed symptoms of a change in emotional state and can include sadness, irritability and diminished interest in previously enjoyed activities.",
+   ["No evidence of depressive symptoms.",
+    "History, suspicion, or mild depression associated with a recent negative life event with minimal impact on life domain functioning.",
+    "Clear evidence of depression associated with either depressed mood or significant irritability. Depression has interfered with the child's ability to function in at least one life domain.",
+    "Clear evidence of depression that is disabling for the child in multiple life domains."], null],
+  [44,"ANXIETY","This item rates evidence of symptoms associated with Anxiety Disorders characterized by either worry, dread, or panic attacks.",
+   ["No evidence of anxiety symptoms.",
+    "History, suspicion, or mild anxiety associated with a recent negative life event.",
+    "Clear evidence of anxiety associated with either anxious mood or significant fearfulness. Anxiety has interfered in the child's ability to function in at least one life domain.",
+    "Clear evidence of a debilitating level of anxiety that is disabling in multiple life domains."], null],
+  [45,"EMOTIONAL CONTROL","This item describes the child or adolescent's ability to manage his/her emotions. It describes symptoms of affect dysregulation.",
+   ["No evidence of any emotional control problems.",
+    "History or suspicion of, or mild problems controlling emotions. Peers and family may be aware of and may attempt to avoid stimulating outbursts.",
+    "Moderate emotional control problems. Child's labile mood and/or extreme mood swings have gotten him/her in significant trouble with peers, family and/or school. Others are likely quite aware of unstable emotions.",
+    "Severe emotional control problems. Child is unable to regulate his/her emotions. Others likely fear him/her."], null],
+  [46,"INTERPERSONAL SKILLS","This item refers to the child's ability to make and maintain friendships and other relationships with peers and adults.",
+   ["Good interpersonal skills. Child has excellent, mature relationship skills.",
+    "Adequate interpersonal skills. Child has good, developmentally appropriate relationship skills.",
+    "Fair interpersonal skills. Child has some difficulties with social skills and friendship development and/or maintenance.",
+    "Significant difficulties with interpersonal skills. Child has significant difficulties with social skills and friendship development."], null],
+  [47,"RELATIONSHIP WITH PARENTS/CAREGIVER(S)","This item refers to the child's relationship with his or her parents or primary caregiver(s).",
+   ["Adaptive relationship. Child has a generally positive relationship with parents and/or primary caregivers. The child appears to have formed a secure attachment, and can turn to primary caregivers for security, comfort, or guidance.",
+    "Mostly adaptive relationship. Child has a somewhat positive relationship with parents and/or primary caregivers. The child appears to have mild attachment problems that interfere with his or her ability to turn primary caregivers for security, comfort, or guidance.",
+    "Limited adaptive relationship. Child has a somewhat negative relationship with parents and/or primary caregivers. The child appears to have moderate attachment problems that interfere with his or her ability to turn primary caregivers for security, comfort, or guidance.",
+    "Significant difficulties with relationship. Child has no ongoing relationships with parents and/or primary caregivers. The child appears to have severe attachment problems."], null],
+  [48,"ADJUSTMENT TO TRAUMA","This item describes problems associated with traumatic life events. Traumatic events may include sexual abuse, physical abuse, emotional abuse, medical trauma, natural disasters, or witnessing violence or criminal activity.",
+   ["Child has not experienced any significant trauma or has adjusted well to traumatic experiences.",
+    "Child has experienced traumatic event and is not demonstrating symptoms, or there are mild changes in the child's behavior that are controlled by caregiver.",
+    "Clear evidence of adjustment problems associated with traumatic life events. Adjustment is interfering with child's functioning in at least one life domain.",
+    "Clear evidence of debilitating level of trauma symptoms or symptoms of Post-Traumatic Stress Disorder, which may include flashbacks, nightmares, significant anxiety, and intrusive thoughts of trauma experience."], null],
+  [49,"EXPLOITATION","This item is used to examine a history and level of current risk for exploitation. This may include physical or sexual abuse, significant psychological abuse by family or friend, extortion or violent crime.",
+   ["No history of exploitation and no risk of exploitation.",
+    "Child has a history of exploitation, but has not been recently victimized. Child is not currently at risk for re-exploitation.",
+    "Child has been recently exploited (within the past year), but is not in acute risk for re-exploitation.",
+    "Child has been recently exploited and is in acute risk for re-exploitation."], null],
+  [50,"CULTURAL STRESS","Cultural stress refers to experiences and feelings of discomfort and/or distress arising from friction (real or perceived) between an individual's own cultural identity and the predominant culture in which he/she lives. Culture can be defined broadly to include such things as religious beliefs and sexual orientation. This need reflects concerns such as racism, discrimination, or harassment because of sexual orientation, appearance, or background.",
+   ["No evidence of stress between child's cultural identity and current living situation.",
+    "Some mild or occasional stress resulting from friction between the child's cultural identity and his/her current living situation.",
+    "Child is experiencing cultural stress that is causing problems of functioning in at least one life domain.",
+    "Child is experiencing a high level of cultural stress that is making functioning in any life domain difficult under the present circumstances."], null]
+ ]},
+ {g:"Child's Status", name:"Developmental Needs", items:[
+  [51,"COMMUNICATION SKILLS","Development of child's communication skills.",
+   ["Child's receptive and expressive communication appears developmentally appropriate. There is no reason to believe that the child has any problems communicating.",
+    "Child has receptive communication skills, but limited expressive communication skills.",
+    "Child has both limited receptive and expressive communication skills.",
+    "Child is unable to communicate."], null],
+  [52,"DEVELOPMENTAL","Developmental delays and presence of developmental disorders.",
+   ["Child's development appears within normal range. There is no reason to believe that the child has any developmental problems.",
+    "Evidence of a mild developmental delay.",
+    "Evidence of a pervasive developmental disorder including Autism, Tourette's, Down's Syndrome or other significant developmental delay.",
+    "Severe developmental disorder."], null],
+  [53,"SELF-CARE DAILY LIVING SKILLS","Development of child's self-care and daily living skills.",
+   ["Child's self-care and daily living skills appear developmentally appropriate. There is no reason to believe that the child has any problems performing daily living skills.",
+    "Child requires verbal prompting on self-care tasks or daily living skills.",
+    "Child requires assistance (physical prompting) on self-care tasks or attendant care on one self-care task (e.g., eating, bathing, dressing, and toileting).",
+    "Child requires attendant care on more than one of the self-care tasks – eating, bathing, dressing, toileting."], null]
+ ]},
+ {g:"Child's Status", name:"Education", items:[
+  [54,"SCHOOL ACHIEVEMENT","This item refers to the child's academic achievement. If the child has completed his/her schooling then use '0'. If child has dropped out without completing then use '3'.",
+   ["Child is doing well in school.",
+    "Child is doing adequately in school although some problems with achievement exist.",
+    "Child is having moderate problems in school achievement. He/she may be failing some subjects.",
+    "Child is having severe achievement problems. He/she may be failing most subjects or more than one year behind same age peers in school achievement."],
+   "Not applicable. Not school aged."],
+  [55,"SCHOOL ATTENDANCE","This item refers to the child's attendance in school. If the child has completed his/her schooling then use '0'. If child has dropped out without completing then use '3'.",
+   ["Child attends school regularly.",
+    "Child has some problems attending school but generally goes to school. May miss up to one day per week on average OR may have had moderate to severe problem in the past six months but has been attending school regularly in the past month.",
+    "Child is having problems with school attendance. He/she is missing at least two days each week on average.",
+    "Child is generally truant or refusing to go to school."],
+   "Not applicable. Not school aged."],
+  [56,"SCHOOL BEHAVIOR","This item rates the behavior of the child in school or school-like settings (e.g., pre-school or daycare). If the child has completed his/her schooling then use '0'. If child has dropped out without completing then use '3'.",
+   ["Child is behaving well in school.",
+    "Child is behaving adequately in school although some behavior problems exist.",
+    "Child is having moderate behavioral problems at school. He/she is disruptive and may have received sanctions including suspensions.",
+    "Child is having severe problems with behavior in school. He/she is frequently or severely disruptive. School placement may be in jeopardy due to behavior."],
+   "Not applicable. Not school aged and not in pre-school/daycare environment."]
+ ]},
+ {g:"Child's Status", name:"High Risk Behaviors", items:[
+  [57,"CHILD HIGH RISK BEHAVIORS","This item describes any behavior that has the potential of placing the child or others at risk of physical harm. Suicidal behavior, violence, recklessness, alcohol and drug use, fire setting, and sexual aggression would be rated here.",
+   ["No evidence of any high risk behavior.",
+    "Child has a notable history of high risk behavior, but not in the past month.",
+    "Child engages in high risk behavior that interferes with functioning and may place self and others at risk of physical harm.",
+    "Child engages in high risk behavior that places self or others at immediate risk of physical harm."], null],
+  [58,"SUBSTANCE USE","This item rates the severity of the child's substance use which includes alcohol, illegal drugs and inappropriate use of prescription medications.",
+   ["No evidence of substance use.",
+    "History or suspicion of, or mild use of substances.",
+    "Clear evidence of substance abuse that interferes with functioning in any life domain.",
+    "Child requires detoxification, is dependent or addicted to alcohol and/or drugs. Include here a child/youth who is intoxicated at the time of the assessment (i.e., currently under the influence)."], null],
+  [59,"DELINQUENCY / CRIMINAL BEHAVIOR","This item describes any behavior that has the potential of placing the child at risk of juvenile justice sanctions.",
+   ["No evidence of delinquency, criminal, or problematic behavior. Child does not engage in behavior that forces adults to sanction him or her.",
+    "Youth has engaged in mild violations (e.g., curfew).",
+    "Youth has engaged in delinquent or criminal behavior.",
+    "Youth has engaged in delinquent criminal behavior that places others at risk of significant physical harm."], null],
+  [60,"FREQUENCY OF RUNNING","This item describes the child's history with running away.",
+   ["Child has never run away.",
+    "Child has a history of running away or has run away once in the past year.",
+    "Child has run on multiple occasions in the past year.",
+    "Child runs at every opportunity."], null],
+  [61,"PEER INFLUENCES","This item describes the role of the child's primary peer social network in influencing negative behaviors, such as high risk behaviors, delinquency, or substance abuse.",
+   ["Child's primary peer social network does not engage in problematic behavior.",
+    "Child has peers in his or her primary peer social network who do not engage in problematic behavior, but has some peers who do.",
+    "Child predominantly has peers who engage in problematic behavior.",
+    "Child predominantly has peers who engage in problematic behavior that endangers self and others."], null],
+  [62,"PARTNER RELATIONS","This item refers to the child or teen's relationship with another peer. This may be a boyfriend, girlfriend, or significant other.",
+   ["Youth has a strong, positive, partner relationship with another peer. Also rated here would be a youth without a relationship who currently has no interest in one, or a child too young for romantic relationships.",
+    "Youth is currently involved in a generally positive relationship with another peer, but some concerns exist.",
+    "Youth is currently involved in a generally negative relationship with another peer. The relationship partner may engage in problematic behavior or be a bad influence on the youth.",
+    "Youth is currently involved in a negative, unhealthy relationship with another peer. This would also include a youth involved in a relationship with domestic violence issues."], null]
+ ]}
+];
+
+/* ===== Lookups ===== */
+const ITEM = {}, SEC_OF = {};
+SECTIONS.forEach((s, si) => {
+  s.idx = si;
+  s.items = s.items.map(a => ({n:a[0], t:a[1], d:a[2], r:a[3], na:a[4]}));
+  s.items.forEach(it => { ITEM[it.n] = it; SEC_OF[it.n] = s; });
+});
+const TOTAL = 62;
+
+/* ===== Screens ===== */
+const SCREENS = [{type:"start"}];
+for (let n = 1; n <= TOTAL; n++) SCREENS.push({type:"item", n});
+SCREENS.push({type:"notes"}, {type:"fspIntro"}, {type:"vision"});
+for (let g = 0; g < 4; g++) SCREENS.push({type:"goal", g});
+SCREENS.push({type:"print"});
+const NOTES = 63, FSPI = 64, VISION = 65, G0 = 66, PRINT = 70;
+const CHILD_START = 39;
+
+/* ===== State (memory only) ===== */
+function blankState(){
+  return {intake:"", fsna:"", youth:"", family:"", dob:"", r:{}, notes:"", vision:"",
+          goals:[0,1,2,3].map(() => ({text:"", who:"", prog:""}))};
+}
+let S = blankState();
+let pos = 0, fromPrint = PRINT - 1;
+
+/* ===== Helpers ===== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+function parseDate(raw){
+  let s = String(raw || "").trim().toLowerCase();
+  if (!s) return null;
+  const now = new Date();
+  if (s === "t" || s === "today") return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let m, d, y;
+  if (/^\d+$/.test(s)) {
+    if (s.length === 4) { m = +s.slice(0,2); d = +s.slice(2,4); y = now.getFullYear(); }
+    else if (s.length === 6 || s.length === 8) { m = +s.slice(0,2); d = +s.slice(2,4); y = +s.slice(4); }
+    else return null;
+  } else {
+    const p = s.split(/[\/\-\.\s]+/).filter(Boolean);
+    if (p.some(x => !/^\d+$/.test(x))) return null;
+    if (p.length === 3 && p[0].length === 4) { y = +p[0]; m = +p[1]; d = +p[2]; }
+    else if (p.length === 3) { if (p[2].length !== 2 && p[2].length !== 4) return null; m = +p[0]; d = +p[1]; y = +p[2]; }
+    else if (p.length === 2) { m = +p[0]; d = +p[1]; y = now.getFullYear(); }
+    else return null;
+  }
+  if (y < 100) { y += 2000; if (y > now.getFullYear() + 1) y -= 100; }
+  const dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
+  return dt;
+}
+const addDays = (dt, n) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + n);
+const daysBetween = (a, b) => Math.round((b - a) / 86400000);
+const fmt = dt => dt ? `${pad(dt.getMonth()+1)}/${pad(dt.getDate())}/${dt.getFullYear()}` : "";
+const fmtLong = dt => dt ? dt.toLocaleDateString("en-US", {weekday:"short", month:"short", day:"numeric", year:"numeric"}) : "";
+function ageOn(b, ref){
+  let a = ref.getFullYear() - b.getFullYear();
+  if (ref.getMonth() < b.getMonth() || (ref.getMonth() === b.getMonth() && ref.getDate() < b.getDate())) a--;
+  return a;
+}
+function dates(){
+  const i = parseDate(S.intake), f = parseDate(S.fsna), b = parseDate(S.dob);
+  return {i, f, b, i30: i ? addDays(i, 30) : null, plan: f ? addDays(f, 1) : null};
+}
+const rText = v => v === undefined ? "skip" : (v === "NA" ? "N/A" : String(v));
+function hasData(){
+  return !!(S.intake || S.fsna || S.youth || S.family || S.dob || Object.keys(S.r).length || S.notes.trim() ||
+            S.vision.trim() || S.goals.some(g => g.text.trim() || g.who.trim()));
+}
+let statusTimer;
+function status(msg, warn){
+  const el = $("#status"); el.textContent = msg; el.className = warn ? "warn" : "";
+  clearTimeout(statusTimer); statusTimer = setTimeout(() => { el.textContent = ""; }, 4000);
+}
+function setR(n, v){
+  S.r[n] = v;
+  status(`#${n} ${ITEM[n].t} → ${v === "NA" ? "N/A" : v}`);
+}
+
+/* ===== Navigation ===== */
+function go(i){
+  i = Math.max(0, Math.min(SCREENS.length - 1, i));
+  if (i === PRINT && pos !== PRINT) fromPrint = pos;
+  pos = i; render();
+}
+const next = () => go(pos + 1);
+const prev = () => go(pos - 1);
+function nextSection(n){
+  const s = SEC_OF[n], ns = SECTIONS[s.idx + 1];
+  go(ns ? ns.items[0].n : NOTES);
+}
+function prevSection(n){
+  const s = SEC_OF[n];
+  if (n !== s.items[0].n) return go(s.items[0].n);
+  const ps = SECTIONS[s.idx - 1];
+  go(ps ? ps.items[0].n : 0);
+}
+
+/* ===== Rendering ===== */
+const main = $("#main");
+const kb = k => `<kbd>${k}</kbd>`;
+function keys(list){ $("#keys").innerHTML = list.map(x => `<span>${x}</span>`).join(""); }
+
+function renderChips(){
+  const who = [S.youth, S.family].filter(Boolean).join(" · ");
+  $("#who").textContent = who;
+  let h = `<button class="chip wide ${pos===0?"cur":""}" data-go="0" tabindex="-1">Start</button>`;
+  SECTIONS.forEach(s => {
+    h += `<span class="cg" title="${esc(s.name)}">` + s.items.map(it => {
+      const v = S.r[it.n];
+      const cls = v === undefined ? "" : (v === "NA" ? "na" : "r");
+      return `<button class="chip ${cls} ${pos===it.n?"cur":""}" data-go="${it.n}" tabindex="-1" title="${it.n}. ${esc(it.t)}: ${rText(v)}">${it.n}</button>`;
+    }).join("") + `</span>`;
+  });
+  h += `<button class="chip wide ${pos===NOTES?"cur":""}" data-go="${NOTES}" tabindex="-1">Notes</button>`;
+  h += `<button class="chip wide ${pos>=FSPI&&pos<PRINT?"cur":""}" data-go="${FSPI}" tabindex="-1">FSP</button>`;
+  h += `<button class="chip wide ${pos===PRINT?"cur":""}" data-go="${PRINT}" tabindex="-1">Print</button>`;
+  $("#chips").innerHTML = h;
+}
+$("#chips").addEventListener("click", e => {
+  const b = e.target.closest("[data-go]"); if (!b) return;
+  b.blur(); go(+b.dataset.go);
+});
+
+function render(){
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+  renderChips();
+  const sc = SCREENS[pos];
+  ({start:renderStart, item:renderItem, notes:renderNotes, fspIntro:renderFspIntro,
+    vision:renderVision, goal:renderGoal, print:renderPrint})[sc.type](sc);
+  window.scrollTo(0, 0);
+}
+
+/* --- Chained text fields: Enter/Tab forward, Shift+Tab back --- */
+function wireChain(els, opts = {}){
+  els.forEach((el, i) => {
+    el.addEventListener("keydown", e => {
+      const isTA = el.tagName === "TEXTAREA";
+      if (e.key === "Escape" && opts.esc) { e.preventDefault(); opts.esc(); return; }
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); next(); return; }
+      if (e.key === "Enter" && !e.shiftKey && !(isTA && opts.enterNewline)) {
+        e.preventDefault();
+        if (opts.onEnter && opts.onEnter(el, i)) return;
+        if (i < els.length - 1) els[i+1].focus(); else next();
+        return;
+      }
+      if (e.key === "Tab" && !e.shiftKey && i === els.length - 1) { e.preventDefault(); next(); return; }
+      if (e.key === "Tab" && e.shiftKey && i === 0) { e.preventDefault(); prev(); return; }
+    });
+  });
+}
+function focusEnd(el){ el.focus(); if (el.setSelectionRange) { const L = el.value.length; el.setSelectionRange(L, L); } }
+
+/* --- Start --- */
+function renderStart(){
+  const row = (k, label, ph) =>
+    `<label for="f_${k}">${label}</label><input type="text" id="f_${k}" autocomplete="off" spellcheck="false" placeholder="${ph}" value="${esc(S[k])}"><div class="help" id="h_${k}"></div>`;
+  main.innerHTML = `
+    <h1 class="scr">New FSNA / FSP</h1>
+    <p class="sub">Everything is optional. Nothing is saved: refreshing or closing this page clears it.</p>
+    <div class="form">
+      ${row("intake", "Intake date", "mm/dd/yy")}
+      ${row("fsna", "FSNA date (done on)", "mm/dd/yy")}
+      ${row("youth", "Youth's name", "")}
+      ${row("family", "Family last name", "")}
+      ${row("dob", "Youth's DOB", "mm/dd/yy (optional)")}
+    </div>
+    <p class="hint">Dates: <b>101926</b>, <b>10/19/26</b>, <b>10-19</b> (this year), or <b>t</b> for today.</p>
+    <div class="navbtns"><button class="plain" id="b_go">Start FSNA →</button></div>`;
+  const ids = ["intake","fsna","youth","family","dob"];
+  const els = ids.map(k => $("#f_" + k));
+  els.forEach((el, i) => {
+    const k = ids[i];
+    el.addEventListener("input", () => { S[k] = el.value; updateHelps(); renderChips(); });
+    if (["intake","fsna","dob"].includes(k)) el.addEventListener("blur", () => {
+      const d = parseDate(el.value); if (d) { el.value = fmt(d); S[k] = el.value; updateHelps(); }
+    });
+  });
+  wireChain(els);
+  $("#b_go").addEventListener("click", next);
+  updateHelps();
+  focusEnd(els[0]);
+  keys([`${kb("Enter")} / ${kb("Tab")} next box`, `${kb("Shift")}+${kb("Tab")} previous box`, `${kb("Enter")} on last box → item 1`]);
+}
+function updateHelps(){
+  const d = dates();
+  const bad = '<span class="warn">can\'t read that date</span>';
+  $("#h_intake").innerHTML = d.i ? `${fmtLong(d.i)} &nbsp;·&nbsp; +30 days = <b>${fmtLong(d.i30)}</b>` : (S.intake.trim() ? bad : "");
+  if (d.f) {
+    let rel = "";
+    if (d.i) {
+      const n = daysBetween(d.i, d.f);
+      const txt = n < 0 ? `${-n} days BEFORE intake` : `${n} days after intake`;
+      rel = ` &nbsp;·&nbsp; ` + (n < 0 || n > 30 ? `<span class="warn">${txt}</span>` : txt);
+    }
+    $("#h_fsna").innerHTML = `${fmtLong(d.f)}${rel}<br>FSP date = <b>${fmtLong(d.plan)}</b>`;
+  } else $("#h_fsna").innerHTML = S.fsna.trim() ? bad : "";
+  if (d.b) {
+    const ref = d.f || new Date();
+    $("#h_dob").innerHTML = `${fmtLong(d.b)} &nbsp;·&nbsp; age <b>${ageOn(d.b, ref)}</b>`;
+  } else $("#h_dob").innerHTML = S.dob.trim() ? bad : "";
+  $("#h_youth").innerHTML = ""; $("#h_family").innerHTML = "";
+}
+
+/* --- FSNA item --- */
+function renderItem(sc){
+  const n = sc.n, it = ITEM[n], s = SEC_OF[n], cur = S.r[n];
+  let h = `<div class="crumb">${esc(s.g)} › ${esc(s.name)} <span class="pos">· item ${n} of ${TOTAL} · section ${s.idx+1} of ${SECTIONS.length}</span></div>`;
+  h += `<h1 class="item">${n}. ${esc(it.t)}</h1>`;
+  h += `<div class="desc">${it.d.split("\n\n").map(p => `<p>${esc(p)}</p>`).join("")}</div>`;
+  it.r.forEach((txt, i) => {
+    h += `<div class="opt ${cur===i?"sel":""}" data-v="${i}"><div class="k">${i}</div><div>${esc(txt)}</div></div>`;
+  });
+  if (it.na) h += `<div class="opt ${cur==="NA"?"sel":""}" data-v="NA"><div class="k na">4</div><div><b>N/A</b> — ${esc(it.na)}</div></div>`;
+  main.innerHTML = h;
+  main.querySelectorAll(".opt").forEach(o => o.addEventListener("click", () => {
+    const v = o.dataset.v; setR(n, v === "NA" ? "NA" : +v); next();
+  }));
+  main.focus({preventScroll:true});
+  keys([`${kb("0")}–${kb("3")} rate`, it.na ? `${kb("4")} N/A` : `<span style="opacity:.5">${kb("4")} N/A (not on this item)</span>`,
+        `${kb("→")} / ${kb("Space")} skip`, `${kb("←")} back`, `${kb("Enter")} next section`,
+        `${kb("Shift")}+${kb("Enter")} prev section`, `${kb("C")} child section (39)`, `${kb("Del")} clear rating`]);
+}
+function itemKey(e, n){
+  const k = e.key;
+  if (e.repeat && /^[0-4]$/.test(k)) { e.preventDefault(); return; }   // holding a number key won't rate a run of items
+  if (/^[0-3]$/.test(k)) { e.preventDefault(); setR(n, +k); next(); return; }
+  if (k === "4") {
+    e.preventDefault();
+    if (ITEM[n].na) { setR(n, "NA"); next(); } else status(`Item ${n} has no N/A option`, true);
+    return;
+  }
+  if (k === "ArrowRight" || k === " " || k === "Spacebar") {
+    e.preventDefault(); if (S.r[n] === undefined) status(`#${n} skipped`); next(); return;
+  }
+  if (k === "ArrowLeft") { e.preventDefault(); prev(); return; }
+  if (k === "Enter") { e.preventDefault(); e.shiftKey ? prevSection(n) : nextSection(n); return; }
+  if (k === "c" || k === "C") { e.preventDefault(); go(CHILD_START); return; }
+  if (k === "Backspace" || k === "Delete") { e.preventDefault(); delete S.r[n]; status(`#${n} cleared`); render(); return; }
+}
+
+/* --- Notes --- */
+function renderNotes(){
+  main.innerHTML = `
+    <h1 class="scr">FSNA notes</h1>
+    <p class="sub">Optional. Prints at the bottom of the FSNA page.</p>
+    <textarea id="f_notes" rows="12">${esc(S.notes)}</textarea>
+    <div class="navbtns"><button class="plain" id="b_back">← Back</button><button class="plain" id="b_next">Next: FSP →</button></div>`;
+  const ta = $("#f_notes");
+  ta.addEventListener("input", () => { S.notes = ta.value; });
+  wireChain([ta], {enterNewline:true});
+  $("#b_back").addEventListener("click", prev); $("#b_next").addEventListener("click", next);
+  focusEnd(ta);
+  keys([`${kb("Enter")} new line`, `${kb("Tab")} / ${kb("Ctrl")}+${kb("Enter")} next (FSP)`, `${kb("Shift")}+${kb("Tab")} back to item 62`]);
+}
+
+/* --- FSP intro --- */
+function prefillKV(){
+  const d = dates();
+  return `<div class="kv">
+    <div>Family's name</div><div>${esc(S.family) || "—"}</div>
+    <div>Youth's name</div><div>${esc(S.youth) || "—"}</div>
+    <div>Youth's DOB</div><div>${fmt(d.b) || "—"}</div>
+    <div>Name of FRC</div><div>${esc(FRC)}</div>
+    <div>Original date of plan</div><div>${d.plan ? fmt(d.plan) + " (FSNA + 1 day)" : "— (no FSNA date)"}</div>
+    <div>Completed by</div><div>${esc(CLINICIAN)}</div>
+  </div>`;
+}
+function renderFspIntro(){
+  main.innerHTML = `
+    <h1 class="scr">Family Support Plan</h1>
+    <p class="sub">These fill in automatically. Skipping still lets you print the FSP with this info.</p>
+    ${prefillKV()}
+    <div class="navbtns"><button class="plain" id="b_back">← Back</button>
+      <button class="plain" id="b_start">Fill out FSP (Enter)</button>
+      <button class="plain" id="b_skip">Skip to print (S)</button></div>`;
+  $("#b_back").addEventListener("click", prev);
+  $("#b_start").addEventListener("click", next);
+  $("#b_skip").addEventListener("click", () => go(PRINT));
+  main.focus({preventScroll:true});
+  keys([`${kb("Enter")} / ${kb("→")} fill out FSP`, `${kb("S")} skip FSP → print`, `${kb("←")} back to notes`]);
+}
+
+/* --- FSP vision --- */
+function renderVision(){
+  main.innerHTML = `
+    <div class="crumb">Family Support Plan</div>
+    <h1 class="scr">Vision / Need of Family</h1>
+    <p class="sub">Describe specific improvement if need is addressed.</p>
+    <textarea id="f_vision" rows="4">${esc(S.vision)}</textarea>
+    <div class="navbtns"><button class="plain" id="b_back">← Back</button><button class="plain" id="b_next">Next: Goal 1 →</button><button class="plain" id="b_print">Done → print (Esc)</button></div>`;
+  const ta = $("#f_vision");
+  ta.addEventListener("input", () => { S.vision = ta.value; });
+  wireChain([ta], {esc: () => go(PRINT)});
+  $("#b_back").addEventListener("click", prev); $("#b_next").addEventListener("click", next);
+  $("#b_print").addEventListener("click", () => go(PRINT));
+  focusEnd(ta);
+  keys([`${kb("Enter")} / ${kb("Tab")} next`, `${kb("Shift")}+${kb("Enter")} new line`, `${kb("Shift")}+${kb("Tab")} back`, `${kb("Esc")} done → print`]);
+}
+
+/* --- FSP goal --- */
+const PROGS = ["Active","Deferred","Completed"];
+function renderGoal(sc){
+  const g = sc.g, G = S.goals[g];
+  main.innerHTML = `
+    <div class="crumb">Family Support Plan · goal ${g+1} of 4</div>
+    <h1 class="scr">Goal ${g+1}</h1>
+    ${S.vision.trim() ? `<div class="ctx"><b>Vision:</b> ${esc(S.vision)}</div>` : ""}
+    <div class="stack">
+      <div><label for="f_gt">What will be done to help family achieve the vision/need?</label>
+        <textarea id="f_gt" rows="3" placeholder="Leave blank and press Enter to skip this goal">${esc(G.text)}</textarea></div>
+      <div><label for="f_gw">Person(s) responsible</label><input type="text" id="f_gw" autocomplete="off" value="${esc(G.who)}"></div>
+      <div><label>Progress</label><div class="prog" id="f_gp" tabindex="0">
+        ${PROGS.map(p => `<button tabindex="-1" data-p="${p}" class="${G.prog===p?"on":""}">${p} ${kb(p[0])}</button>`).join("")}
+      </div></div>
+    </div>
+    <div class="navbtns"><button class="plain" id="b_back">← Back</button><button class="plain" id="b_next">${g < 3 ? `Next: Goal ${g+2} →` : "Next: Print →"}</button><button class="plain" id="b_print">Done → print (Esc)</button></div>`;
+  const gt = $("#f_gt"), gw = $("#f_gw"), gp = $("#f_gp");
+  const paint = () => gp.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.p === G.prog));
+  gt.addEventListener("input", () => { G.text = gt.value; if (G.text.trim() && !G.prog) { G.prog = "Active"; paint(); } });
+  gw.addEventListener("input", () => { G.who = gw.value; });
+  gp.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; G.prog = G.prog === b.dataset.p ? "" : b.dataset.p; paint(); gp.focus(); });
+  gp.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if (k === "a" || k === "d" || k === "c") { e.preventDefault(); G.prog = PROGS.find(p => p[0].toLowerCase() === k); paint(); return; }
+    if (k === "backspace" || k === "delete") { e.preventDefault(); G.prog = ""; paint(); return; }
+    if (k === "arrowright" || k === "arrowleft") {
+      e.preventDefault(); const i = PROGS.indexOf(G.prog);
+      G.prog = PROGS[(i + (k === "arrowright" ? 1 : PROGS.length - 1) + (i < 0 && k === "arrowleft" ? 1 : 0)) % PROGS.length]; paint();
+    }
+  });
+  wireChain([gt, gw, gp], {
+    esc: () => go(PRINT),
+    onEnter: (el) => { if (el === gt && !gt.value.trim()) { next(); return true; } return false; }
+  });
+  $("#b_back").addEventListener("click", prev); $("#b_next").addEventListener("click", next);
+  $("#b_print").addEventListener("click", () => go(PRINT));
+  focusEnd(gt);
+  keys([`${kb("Enter")} / ${kb("Tab")} next box`, `${kb("Shift")}+${kb("Enter")} new line`, `Blank goal + ${kb("Enter")} skip goal`,
+        `Progress: ${kb("A")} ${kb("D")} ${kb("C")}`, `${kb("Shift")}+${kb("Tab")} back`, `${kb("Esc")} done → print`]);
+}
+
+/* --- Print screen --- */
+function renderPrint(){
+  const vals = Object.values(S.r);
+  const na = vals.filter(v => v === "NA").length, rated = vals.length - na, skipped = TOTAL - vals.length;
+  const used = SECTIONS.filter(s => s.items.some(it => S.r[it.n] !== undefined));
+  const left = SECTIONS.filter(s => !used.includes(s));
+  const goals = S.goals.filter(g => g.text.trim()).length;
+  main.innerHTML = `
+    <h1 class="scr">Print</h1>
+    <div class="printbtns">
+      <button class="big" id="b_fsna">Print FSNA &nbsp;${kb("F")}</button>
+      <button class="big alt" id="b_fsp">Print FSP &nbsp;${kb("P")}</button>
+    </div>
+    <div class="summary">
+      <p><b>FSNA:</b> ${rated} rated · ${na} N/A · ${skipped} skipped (of ${TOTAL})${S.notes.trim() ? " · notes included" : ""}</p>
+      <p><b>Sections printing:</b> ${used.length ? used.map(s => esc(s.name)).join(", ") : "none (nothing rated)"}</p>
+      ${left.length ? `<p><b>Left off (all skipped):</b> ${left.map(s => esc(s.name)).join(", ")}</p>` : ""}
+      <p><b>FSP:</b> vision ${S.vision.trim() ? "filled" : "blank"} · ${goals} of 4 goals filled</p>
+    </div>
+    <div class="navbtns"><button class="plain" id="b_back">← Back</button><button class="plain danger" id="b_reset">Start over (clears everything)</button></div>`;
+  $("#b_fsna").addEventListener("click", () => doPrint("fsna"));
+  $("#b_fsp").addEventListener("click", () => doPrint("fsp"));
+  $("#b_back").addEventListener("click", () => go(fromPrint));
+  $("#b_reset").addEventListener("click", () => {
+    if (confirm("Clear everything and start a new FSNA/FSP?")) { S = blankState(); go(0); status("Cleared"); }
+  });
+  main.focus({preventScroll:true});
+  keys([`${kb("F")} print FSNA`, `${kb("P")} print FSP`, `${kb("←")} back`]);
+}
+
+/* ===== Global keys (only when not typing in a box) ===== */
+document.addEventListener("keydown", e => {
+  if (e.defaultPrevented) return;      // already handled by a text box (e.g. Enter that moved to the next screen)
+  const a = document.activeElement;
+  if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.classList.contains("prog"))) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const sc = SCREENS[pos];
+  if (sc.type === "item") return itemKey(e, sc.n);
+  const k = e.key;
+  if (sc.type === "fspIntro") {
+    if (k === "Enter" || k === "ArrowRight" || k === " ") { e.preventDefault(); next(); }
+    else if (k === "s" || k === "S" || k === "Escape") { e.preventDefault(); go(PRINT); }
+    else if (k === "ArrowLeft") { e.preventDefault(); prev(); }
+    return;
+  }
+  if (sc.type === "print") {
+    if (k === "f" || k === "F") { e.preventDefault(); doPrint("fsna"); }
+    else if (k === "p" || k === "P") { e.preventDefault(); doPrint("fsp"); }
+    else if (k === "ArrowLeft") { e.preventDefault(); go(fromPrint); }
+    return;
+  }
+  // Text screens where focus slipped off the box: Enter puts you back in it
+  if (k === "Enter") { const f = main.querySelector("input,textarea"); if (f) { e.preventDefault(); focusEnd(f); } }
+});
+
+/* ===== Print builders ===== */
+function itemRow(n){
+  const v = S.r[n];
+  const cls = v === undefined ? "skip" : (v === "NA" ? "na" : "");
+  return `<div class="it"><span class="num">${n}</span><span class="val ${cls}">${rText(v)}</span></div>`;
+}
+function fsnaHeader(){
+  const d = dates();
+  return `<div class="fs-head"><div class="fs-title">Family Strengths and Needs Assessment <span>(Form J)</span></div><div class="fs-frc">${esc(FRC)} FRC</div></div>
+    <div class="fs-meta">
+      <div><span>Youth</span><b>${esc(S.youth)}</b></div>
+      <div><span>Family</span><b>${esc(S.family)}</b></div>
+      <div><span>DOB</span><b>${fmt(d.b) || esc(S.dob)}</b></div>
+      <div><span>Intake</span><b>${fmt(d.i) || esc(S.intake)}</b></div>
+      <div><span>FSNA date</span><b>${fmt(d.f) || esc(S.fsna)}</b></div>
+      <div><span>Completed by</span><b>${esc(CLINICIAN)}</b></div>
+    </div>`;
+}
+function buildFSNA(){
+  const used = SECTIONS.filter(s => s.items.some(it => S.r[it.n] !== undefined));
+  const notes = S.notes.trim();
+  let body = fsnaHeader();
+  if (used.length) {
+    body += `<div class="fitems">` + used.map(s =>
+      `<div class="sec"><div class="sh">${esc(s.name)}</div>${s.items.map(it => itemRow(it.n)).join("")}</div>`).join("") + `</div>`;
+  } else body += `<p class="none">No items rated.</p>`;
+  // Page 1: numbers (+ "Notes on back" footer only when there are notes). Page 2: header repeated + notes.
+  let h = `<div class="fp1"><div class="fbody">${body}</div>${notes ? `<div class="ffoot">Notes on back</div>` : ""}</div>`;
+  if (notes) h += `<div class="fp2">${fsnaHeader()}<div class="fs-notes"><div class="nl">Notes</div><div class="nt">${esc(notes)}</div></div></div>`;
+  $("#fsnaSheet").innerHTML = h;
+}
+// True when every section sits whole in one column and nothing spills past the page width.
+function sectionsWhole(items){
+  const box = items.getBoundingClientRect();
+  for (const sec of items.querySelectorAll(".sec")) {
+    const rows = sec.querySelectorAll(".sh,.it");
+    const L = rows[0].getBoundingClientRect().left;
+    for (const r of rows) {
+      const rc = r.getBoundingClientRect();
+      if (Math.abs(rc.left - L) > 2 || rc.right > box.right + 2) return false;
+    }
+  }
+  return true;
+}
+function fitFSNA(){
+  const sheet = $("#fsnaSheet"), items = sheet.querySelector(".fitems");
+  if (!items) return;
+  const body = sheet.querySelector(".fbody"), foot = sheet.querySelector(".ffoot");
+  const maxH = 9.85 * 96 * 0.98;     // page-1 box (inside 0.5in margins)
+  const used = () => body.offsetHeight + (foot ? foot.offsetHeight + 8 : 0);
+  const ok = () => used() <= maxH && sectionsWhole(items);
+  const MIN = 0.5, MAX = 2.0;       // ×10pt; one size for every number on the page
+  let best = null;
+  for (const c of [2, 3, 4, 5]) {
+    const colPt = (540 - (c - 1) * 18) / c;           // 7.5in = 540pt
+    const hiW = Math.min(MAX, colPt / 54);             // a row needs ~5.4em of width
+    items.style.columnCount = c;
+    items.style.fontSize = (MIN * 10) + "pt";
+    if (!ok()) continue;
+    let lo = MIN, hi = hiW;
+    items.style.fontSize = (hi * 10) + "pt";
+    if (ok()) lo = hi;
+    else for (let k = 0; k < 14; k++) {
+      const mid = (lo + hi) / 2;
+      items.style.fontSize = (mid * 10) + "pt";
+      if (ok()) lo = mid; else hi = mid;
+    }
+    if (!best || lo > best.s + 0.01) best = {s: lo, c};
+  }
+  if (!best) best = {s: MIN, c: 5};
+  items.style.columnCount = best.c;
+  items.style.fontSize = (best.s * 10) + "pt";
+}
+
+const cb = on => `<span class="cb">${on ? "X" : ""}</span>`;
+const progCell = p => PROGS.map(x => `${cb(p === x)} ${x}`).join("&emsp;&ensp;");
+function buildFSP(){
+  const d = dates();
+  const reviewed = Array(5).fill(`<td class="sh"><b>Reviewed on:</b></td>`).join("");
+  const updated = Array(5).fill(`<td class="sh"><b>Updated by:</b></td>`).join("");
+  let h = `<div class="fsp-brand">Family Resource Centers</div>
+  <table class="fsp-head">
+    <colgroup><col style="width:1%"><col style="width:26%"><col style="width:1%"><col style="width:30%"><col style="width:1%"><col></colgroup>
+    <tr><td class="l">FAMILY'S NAME:</td><td class="v">${esc(S.family)}</td><td class="l">YOUTH'S NAME:</td><td class="v">${esc(S.youth)}</td><td class="l">Family ID</td><td class="v"></td></tr>
+    <tr><td colspan="2" class="v" style="text-align:center">${esc(FRC)}</td><td class="l">YOUTH'S DOB:</td><td class="v">${fmt(d.b) || esc(S.dob)}</td><td class="l">Family Member ID:</td><td class="v"></td></tr>
+    <tr><td colspan="2" class="cap">(Name of FRC)</td><td colspan="4"></td></tr>
+  </table>
+  <table class="fsp-dates">
+    <tr><td><b>Original Date of this plan:</b> ${fmt(d.plan)}</td>${reviewed}</tr>
+    <tr><td><b>Completed by:</b> ${esc(CLINICIAN)}</td>${updated}</tr>
+  </table>
+  <table class="fsp-main">
+    <colgroup><col style="width:7%"><col style="width:43%"><col style="width:18%"><col style="width:32%"></colgroup>
+    <tr class="hd"><td class="b u">No.</td><td colspan="3"><b>Vision/Need of Family</b> (<i>Describe specific improvement if need is addressed</i>)</td></tr>
+    <tr class="vis"><td class="b">Vision</td><td colspan="3" class="txt">${esc(S.vision.trim())}</td></tr>`;
+  S.goals.forEach((G, i) => {
+    h += `
+    <tr class="gh"><td class="c b u">Goal #</td><td class="b">What will be done to help family achieve the vision/need?<br><i>(if referring to a service, please note how it is hoped the service will help)</i></td><td class="b u">Person(s) Responsible</td><td class="b u">Progress</td></tr>
+    <tr class="gb"><td class="c">${i+1}</td><td class="txt">${esc(G.text.trim())}</td><td class="txt">${esc(G.who.trim())}</td><td class="pc">${progCell(G.prog)}</td></tr>
+    <tr class="pr"><td colspan="2" class="b">Progress / Review of Goals</td><td colspan="2" class="b">Accomplishment / Progress / Barriers for this Goal</td></tr>
+    <tr class="pb"><td class="c">Date</td><td class="pc">${progCell("")}</td><td colspan="2"></td></tr>`;
+  });
+  h += `</table>
+  <p class="fsp-next">This Plan will be reviewed next on: ______________________ (all Family Support Plans should be reviewed every ______ weeks).<br><span class="dl">(Date)</span></p>
+  <div class="fsp-foot">Form K - Family Support Plan</div>`;
+  $("#fspSheet").innerHTML = h;
+}
+function fitFSP(){
+  const sheet = $("#fspSheet");
+  const maxH = 7.7 * 96 * 0.97;     // 8.5in landscape height − 2 × 0.4in margins
+  let lo = 6.5, hi = 10.5;
+  sheet.style.fontSize = hi + "pt";
+  if (sheet.offsetHeight <= maxH) return;
+  for (let k = 0; k < 12; k++) {
+    const mid = (lo + hi) / 2;
+    sheet.style.fontSize = mid + "pt";
+    if (sheet.offsetHeight <= maxH) lo = mid; else hi = mid;
+  }
+  sheet.style.fontSize = lo + "pt";
+}
+
+function doPrint(which){
+  if (which === "fsna") { buildFSNA(); fitFSNA(); $("#pageStyle").textContent = "@page { size: letter portrait; margin: 0.5in; }"; }
+  else { buildFSP(); fitFSP(); $("#pageStyle").textContent = "@page { size: letter landscape; margin: 0.4in; }"; }
+  document.body.classList.remove("p-fsna", "p-fsp");
+  document.body.classList.add("p-" + which);
+  window.print();
+}
+window.addEventListener("afterprint", () => document.body.classList.remove("p-fsna", "p-fsp"));
+window.addEventListener("beforeunload", e => { if (hasData()) { e.preventDefault(); e.returnValue = ""; } });
+
+render();
+</script>
+</body>
+</html>
